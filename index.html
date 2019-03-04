@@ -1,0 +1,223 @@
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta http-equiv="Cache-Control" content="max-age=7200" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <title>设置密码</title>
+        <link rel="stylesheet" type="text/css" href="css/szpassword.css">
+        <link rel="stylesheet" type="text/css" href="css/iconfont.css">
+        <script src="http://www.jq22.com/jquery/jquery-1.10.2.js"></script>
+        <script type="text/javascript">
+            // 初次输入的密码的密码索引
+            var pdIndex = 0;
+            // 重复输入的密码的密码索引
+            var zcpdIndx = 0;
+            // 初次输入的所有密码
+            var numArr = new Array();
+            // 重复输入的所有密码
+            var zcNumArr = new Array();
+            // 密码状态 0为初次输入 1为重复输入
+            var pdNum = 0;
+            // 密码总数
+            var pwdMax=6;
+            $(document).ready(function() {
+                $("#keyboard").hide();
+
+                $(".passub_num ul li.subnum").click(function (){
+                    // 当前用户所输入的数字
+                    var index = $(this).attr("name");
+                    // 如果当前密码为重复输入
+                    if(pdNum==1){
+                        // 如果当前重复输入的密码的位数小于密码最大总数
+                        if(zcpdIndx<pwdMax){
+                            // 将当前重复输入的密码数字存入重复密码集合
+                            zcNumArr.push(index);
+                            // 显示当前重复密码所对应的密码框的密码视图
+                            $("#Truepassword ul li").eq(zcpdIndx).text('*');
+                            if(zcpdIndx==pwdMax-1){
+                                // 将首次输入的所有密码拼接为字符串
+                                var strNum = numArr.join(",");
+                                // 将重复输入的所有密码拼接为字符串
+                                var strzcNum = zcNumArr.join(",");
+                                // 如果两次输入的密码相同
+                                if(strNum==strzcNum){
+                                //向后台发送密码进行验证
+                                console.log('ajax提交密码');
+                            // 如果两次输入的密码不一致
+                            }else{
+                                // 错误提示
+                                $(".password_hint #pwd_infor").text('两次密码不一致，请重新输入确认密码');
+                                // 将重复密码框的所有密码视图清空
+                                setTimeout(function (){
+                                    $("#Truepassword ul li").each(function (){
+                                        $(this).text("");
+                                    })
+                                    // 清零重复输入密码的密码位数
+                                    zcpdIndx =0;
+                                },400)
+                                // 清空重复密码集合中的所有元素
+                                zcNumArr.splice(0,zcNumArr.length);
+                            }
+                        }
+                        // 递增重复输入的密码的密码位数
+                        zcpdIndx++;
+                    }else{
+                        return;
+                    }
+                    // 如果当前密码为首次输入
+                    }else{
+                        // 如果当前密码索引小于或等于最大密码数6
+                        if(pdIndex<pwdMax){
+                            // 将用户所输入的当前密码存入密码库
+                            numArr.push(index);
+                            // 根据用户所输入的密码索引找到对应的密码框
+                            $("#Scpassword ul li").eq(pdIndex).text('*');
+                            // 如果当前所输入的密码为最后一位密码
+                            if(pdIndex==pwdMax-1){
+                                // 密码状态更新为重复输入
+                                pdNum = 1;
+                                $(".password_tit p").html('再次确认密码');
+                                //隐藏首次输入的密码框
+                                $("#Scpassword").hide();
+                                //显示重复输入的密码框
+                                $("#Truepassword").show();
+                            }
+                            pdIndex++;
+                        }else{
+                            return;
+                        }
+                    }
+                })
+
+                //设置数字按钮的鼠标按下和释放的事件处理
+                $(".subnum").on("mousedown",function (e) {
+                   $(e.target).addClass("active")
+                }).on("mouseup",function (e) {
+                    setTimeout(function () {
+                        $(e.target).removeClass("active")
+                    },100)
+                });
+
+                // 设置删除数字按钮的事件监听
+                $(".del_subnum").click(delClick).on("mousedown",function () {
+                    $(this).addClass("active")
+                }).on("mouseup",function () {
+                    var _self=this;
+                    setTimeout(function () {
+                        $(_self).removeClass("active")
+                    },100)
+                });
+
+                // 关闭虚拟键盘
+                $("#closeBtn").on("click",function () {
+                    $("#keyboard").hide();
+                });
+
+                //显示虚拟键盘
+                $("#sbmBtn").on("click",function () {
+                    $("#keyboard").show();
+                });
+            });
+/**
+ *  数组类新增元素移除方法
+  * @param obj 被删元素的元素索引
+ */
+Array.prototype.remove=function(obj){
+    // 删除当前数组对象中的指定元素
+    this.splice(obj,1)
+}
+
+/**
+ * 删除按钮监听处理
+ */
+function delClick(){
+    // 如果当前状态为重复输入
+    if(window.pdNum==1){
+        if(zcpdIndx==0){
+            return;
+        }
+        $("#Truepassword ul li").eq(zcpdIndx-1).text("");
+        zcNumArr.remove(zcpdIndx-1);
+        zcpdIndx--
+    // 如果当前密码状态为初次输入
+    }else{
+        if(pdIndex==0){
+            return;
+        }
+        // 根据当前所输密码的密码索引找到密码数字所对应的密码框并移除密码视图
+        $("#Scpassword ul li").eq(pdIndex-1).text("");
+        // 根据当前所输密码的密码位数删除密码集合中的指定索引的密码
+        numArr.remove(pdIndex-1);
+        // 对当前密码索引递减
+        pdIndex--
+    }
+}
+</script>
+    </head>
+    
+    <body>
+
+    <main>
+    <button id="sbmBtn" class="sbmBtn">提交</button>
+
+    <section id="keyboard" class="keyboard">
+    <!--密码框-->
+        <div class="password">
+            <div class="password_tit">
+                <p>输入支付密码，确认身份</p>
+            </div>
+            <!--首次输入密码的密码框-->
+            <div class="password_num" id="Scpassword">
+                <ul>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                </ul>
+            </div>
+            <!--重复输入密码的密码框-->
+            <div class="password_num" id="Truepassword" style="display: none;">
+                <ul>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                </ul>
+            </div>
+            <!--密码提示信息-->
+            <div class="password_hint">
+                <p style="display: none" id="pwd_infor">4位密码和登录密码无关,用于解锁报表页面</p>
+                <a href="#">找回密码</a>
+            </div>
+            <i id="closeBtn" class="iconfont closeBtn">&#xe685;</i>
+        </div>
+        <!-- 键盘按钮 -->
+        <div class="passub">
+            <div class="passub_num">
+                <ul>
+                    <li class="subnum" name="1">1</li>
+                    <li class="subnum" name="2">2</li>
+                    <li class="subnum" name="3">3</li>
+                    <li class="subnum" name="4">4</li>
+                    <li class="subnum" name="5">5</li>
+                    <li class="subnum" name="6">6</li>
+                    <li class="subnum" name="7">7</li>
+                    <li class="subnum" name="8">8</li>
+                    <li class="subnum" name="9">9</li>
+                    <li class="botcre"></li>
+                    <li class="subnum" name="0">0</li>
+                    <li class="botcre del_subnum" id="delcre">
+                        <img src="image/delete_btn.png" />
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!-- 键盘按钮 结束-->
+    </section>
+    </main>
+    </body>
+</html>
